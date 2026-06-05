@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1780660544 source:c:\users\rteju\onedrive\desktop\graphics-editor\graphics-editor1\main.c
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+
