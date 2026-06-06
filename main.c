@@ -1,136 +1,210 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 
-#define ROWS 20
-#define COLS 50
+#define MAX_SHAPES 100
 
-char canvas[ROWS][COLS];
-
-/* Initialize canvas with '_' */
-void initializeCanvas()
+typedef struct
 {
-    for(int i = 0; i < ROWS; i++)
+    int id;
+    int type;      // 1=Rectangle, 2=Line, 3=Triangle, 4=Circle
+    int x;
+    int y;
+    int size;
+} Shape;
+
+Shape shapes[MAX_SHAPES];
+int shapeCount = 0;
+
+int isIdExists(int id)
+{
+    for(int i=0;i<shapeCount;i++)
     {
-        for(int j = 0; j < COLS; j++)
-        {
-            canvas[i][j] = '_';
-        }
+        if(shapes[i].id == id)
+            return 1;
+    }
+    return 0;
+}
+
+char* getShapeName(int type)
+{
+    switch(type)
+    {
+        case 1: return "Rectangle";
+        case 2: return "Line";
+        case 3: return "Triangle";
+        case 4: return "Circle";
+        default: return "Unknown";
     }
 }
 
-/* Display canvas */
-void displayCanvas()
+void addShape()
 {
-    for(int i = 0; i < ROWS; i++)
+    Shape s;
+
+    printf("\nEnter Shape ID: ");
+    scanf("%d",&s.id);
+
+    if(isIdExists(s.id))
     {
-        for(int j = 0; j < COLS; j++)
-        {
-            printf("%c", canvas[i][j]);
-        }
-        printf("\n");
+        printf("Error! Shape ID already exists.\n");
+        return;
     }
+
+    printf("\nShape Types\n");
+    printf("1 Rectangle\n");
+    printf("2 Line\n");
+    printf("3 Triangle\n");
+    printf("4 Circle\n");
+
+    printf("Enter Shape Type: ");
+    scanf("%d",&s.type);
+
+    if(s.type < 1 || s.type > 4)
+    {
+        printf("Invalid Shape Type!\n");
+        return;
+    }
+
+    printf("Enter X Coordinate: ");
+    scanf("%d",&s.x);
+
+    printf("Enter Y Coordinate: ");
+    scanf("%d",&s.y);
+
+    printf("Enter Size: ");
+    scanf("%d",&s.size);
+
+    shapes[shapeCount++] = s;
+
+    printf("Object Added Successfully!\n");
 }
 
-/* Draw Rectangle */
-void drawRectangle(int x, int y, int width, int height)
+void deleteShape()
 {
-    for(int i = y; i < y + height; i++)
+    int id;
+
+    printf("\nEnter Shape ID to Delete: ");
+    scanf("%d",&id);
+
+    for(int i=0;i<shapeCount;i++)
     {
-        for(int j = x; j < x + width; j++)
+        if(shapes[i].id == id)
         {
-            if(i >= 0 && i < ROWS && j >= 0 && j < COLS)
+            for(int j=i;j<shapeCount-1;j++)
             {
-                canvas[i][j] = '*';
+                shapes[j] = shapes[j+1];
             }
+
+            shapeCount--;
+
+            printf("Object Deleted Successfully!\n");
+            return;
         }
     }
+
+    printf("Shape Not Found!\n");
 }
 
-/* Bresenham Line Algorithm */
-void drawLine(int x1, int y1, int x2, int y2)
+void modifyShape()
 {
-    int dx = abs(x2 - x1);
-    int dy = abs(y2 - y1);
+    int id;
 
-    int sx = (x1 < x2) ? 1 : -1;
-    int sy = (y1 < y2) ? 1 : -1;
+    printf("\nEnter Shape ID to Modify: ");
+    scanf("%d",&id);
 
-    int err = dx - dy;
-
-    while(1)
+    for(int i=0;i<shapeCount;i++)
     {
-        if(x1 >= 0 && x1 < COLS &&
-           y1 >= 0 && y1 < ROWS)
+        if(shapes[i].id == id)
         {
-            canvas[y1][x1] = '*';
-        }
+            printf("\nCurrent Object Information\n");
+            printf("Type : %s\n", getShapeName(shapes[i].type));
+            printf("X    : %d\n", shapes[i].x);
+            printf("Y    : %d\n", shapes[i].y);
+            printf("Size : %d\n", shapes[i].size);
 
-        if(x1 == x2 && y1 == y2)
-            break;
+            printf("\nEnter New Shape Type: ");
+            scanf("%d",&shapes[i].type);
 
-        int e2 = 2 * err;
+            printf("Enter New X Coordinate: ");
+            scanf("%d",&shapes[i].x);
 
-        if(e2 > -dy)
-        {
-            err -= dy;
-            x1 += sx;
-        }
+            printf("Enter New Y Coordinate: ");
+            scanf("%d",&shapes[i].y);
 
-        if(e2 < dx)
-        {
-            err += dx;
-            y1 += sy;
+            printf("Enter New Size: ");
+            scanf("%d",&shapes[i].size);
+
+            printf("Object Modified Successfully!\n");
+            return;
         }
     }
+
+    printf("Shape Not Found!\n");
 }
 
-/* Draw Triangle */
-void drawTriangle(int x1, int y1,
-                  int x2, int y2,
-                  int x3, int y3)
+void displayShapes()
 {
-    drawLine(x1, y1, x2, y2);
-    drawLine(x2, y2, x3, y3);
-    drawLine(x3, y3, x1, y1);
-}
-
-void drawCircle(int cx, int cy, int r)
-{
-    for(int y = 0; y < ROWS; y++)
+    if(shapeCount == 0)
     {
-        for(int x = 0; x < COLS; x++)
-        {
-            double dx = x - cx;
-            double dy = (y - cy) * 2.0;
+        printf("\nNo Objects Present.\n");
+        return;
+    }
 
-            double dist = sqrt(dx * dx + dy * dy);
+    printf("\n========== OBJECT LIST ==========\n");
 
-            if(fabs(dist - r) < 0.6)
-            {
-                canvas[y][x] = '*';
-            }
-        }
+    for(int i=0;i<shapeCount;i++)
+    {
+        printf("\nObject %d\n", i+1);
+        printf("ID   : %d\n", shapes[i].id);
+        printf("Type : %s\n", getShapeName(shapes[i].type));
+        printf("X    : %d\n", shapes[i].x);
+        printf("Y    : %d\n", shapes[i].y);
+        printf("Size : %d\n", shapes[i].size);
     }
 }
 
 int main()
 {
-    initializeCanvas();
+    int choice;
 
-    printf("\n===== INITIAL CANVAS =====\n\n");
-    displayCanvas();
+    do
+    {
+        printf("\n===== OBJECT MANAGEMENT MENU =====\n");
+        printf("1. Add Object\n");
+        printf("2. Delete Object\n");
+        printf("3. Modify Object\n");
+        printf("4. Display Objects\n");
+        printf("5. Exit\n");
 
-    drawRectangle(2, 2, 8, 4);
+        printf("Enter Choice: ");
+        scanf("%d",&choice);
 
-    drawLine(18, 2, 18, 16);
+        switch(choice)
+        {
+            case 1:
+                addShape();
+                break;
 
-    drawTriangle(28, 11, 42, 11, 35, 4);
+            case 2:
+                deleteShape();
+                break;
 
-    drawCircle(35, 16, 4);
+            case 3:
+                modifyShape();
+                break;
 
-    printf("\n===== AFTER DRAWING ALL SHAPES =====\n\n");
-    displayCanvas();
+            case 4:
+                displayShapes();
+                break;
+
+            case 5:
+                printf("Exiting...\n");
+                break;
+
+            default:
+                printf("Invalid Choice!\n");
+        }
+
+    } while(choice != 5);
 
     return 0;
 }
