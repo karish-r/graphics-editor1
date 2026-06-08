@@ -1,53 +1,171 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
+#define ROWS 20
+#define COLS 50
 #define MAX_SHAPES 100
+
+char canvas[ROWS][COLS];
+
+/* ================= SHAPE STRUCTURE ================= */
 
 typedef struct
 {
     int id;
-    int type;      // 1=Rectangle, 2=Line, 3=Triangle, 4=Circle
-    int x;
-    int y;
-    int size;
+    int type;   // 1 Rectangle, 2 Line, 3 Triangle, 4 Circle
+
+    int x1, y1;
+    int x2, y2;
+    int x3, y3;
+
+    int radius;
+
 } Shape;
 
 Shape shapes[MAX_SHAPES];
 int shapeCount = 0;
 
+/* ================= DAY 1 FUNCTIONS ================= */
+
+void initializeCanvas()
+{
+    for(int i = 0; i < ROWS; i++)
+    {
+        for(int j = 0; j < COLS; j++)
+        {
+            canvas[i][j] = '_';
+        }
+    }
+}
+
+void displayCanvas()
+{
+    for(int i = 0; i < ROWS; i++)
+    {
+        for(int j = 0; j < COLS; j++)
+        {
+            printf("%c", canvas[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void drawRectangle(int x, int y, int width, int height)
+{
+    for(int i = y; i < y + height; i++)
+    {
+        for(int j = x; j < x + width; j++)
+        {
+            if(i >= 0 && i < ROWS &&
+               j >= 0 && j < COLS)
+            {
+                canvas[i][j] = '*';
+            }
+        }
+    }
+}
+
+void drawLine(int x1, int y1, int x2, int y2)
+{
+    int dx = abs(x2 - x1);
+    int dy = abs(y2 - y1);
+
+    int sx = (x1 < x2) ? 1 : -1;
+    int sy = (y1 < y2) ? 1 : -1;
+
+    int err = dx - dy;
+
+    while(1)
+    {
+        if(x1 >= 0 && x1 < COLS &&
+           y1 >= 0 && y1 < ROWS)
+        {
+            canvas[y1][x1] = '*';
+        }
+
+        if(x1 == x2 && y1 == y2)
+            break;
+
+        int e2 = 2 * err;
+
+        if(e2 > -dy)
+        {
+            err -= dy;
+            x1 += sx;
+        }
+
+        if(e2 < dx)
+        {
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
+
+void drawTriangle(int x1,int y1,
+                  int x2,int y2,
+                  int x3,int y3)
+{
+    drawLine(x1,y1,x2,y2);
+    drawLine(x2,y2,x3,y3);
+    drawLine(x3,y3,x1,y1);
+}
+
+void drawCircle(int cx,int cy,int r)
+{
+    for(int y=0;y<ROWS;y++)
+    {
+        for(int x=0;x<COLS;x++)
+        {
+            double dx=x-cx;
+            double dy=(y-cy)*2.0;
+
+            double dist=sqrt(dx*dx+dy*dy);
+
+            if(fabs(dist-r)<0.6)
+            {
+                canvas[y][x]='*';
+            }
+        }
+    }
+}
+
+/* ================= OBJECT MANAGEMENT ================= */
+
 int isIdExists(int id)
 {
     for(int i=0;i<shapeCount;i++)
     {
-        if(shapes[i].id == id)
+        if(shapes[i].id==id)
+        {
             return 1;
+        }
     }
+
     return 0;
 }
-
-char* getShapeName(int type)
-{
-    switch(type)
-    {
-        case 1: return "Rectangle";
-        case 2: return "Line";
-        case 3: return "Triangle";
-        case 4: return "Circle";
-        default: return "Unknown";
-    }
-}
-
 void addShape()
 {
-    Shape s;
-
-    printf("\nEnter Shape ID: ");
-    scanf("%d",&s.id);
-
-    if(isIdExists(s.id))
+    if(shapeCount >= MAX_SHAPES)
     {
-        printf("Error! Shape ID already exists.\n");
+        printf("Shape Storage Full!\n");
         return;
     }
+
+    Shape s;
+
+    do
+    {
+        printf("Enter Shape ID: ");
+        scanf("%d",&s.id);
+
+        if(isIdExists(s.id))
+        {
+            printf("ID already exists. Enter a different ID.\n");
+        }
+
+    }while(isIdExists(s.id));
 
     printf("\nShape Types\n");
     printf("1 Rectangle\n");
@@ -58,45 +176,68 @@ void addShape()
     printf("Enter Shape Type: ");
     scanf("%d",&s.type);
 
-    if(s.type < 1 || s.type > 4)
+    while(s.type < 1 || s.type > 4)
     {
-        printf("Invalid Shape Type!\n");
-        return;
+        printf("Invalid Type! Enter again: ");
+        scanf("%d",&s.type);
     }
 
-    printf("Enter X Coordinate: ");
-    scanf("%d",&s.x);
+    switch(s.type)
+    {
+        case 1:
+            printf("Enter x y width height: ");
+            scanf("%d%d%d%d",
+                  &s.x1,&s.y1,
+                  &s.x2,&s.y2);
+            break;
 
-    printf("Enter Y Coordinate: ");
-    scanf("%d",&s.y);
+        case 2:
+            printf("Enter x1 y1 x2 y2: ");
+            scanf("%d%d%d%d",
+                  &s.x1,&s.y1,
+                  &s.x2,&s.y2);
+            break;
 
-    printf("Enter Size: ");
-    scanf("%d",&s.size);
+        case 3:
+            printf("Enter x1 y1 x2 y2 x3 y3: ");
+            scanf("%d%d%d%d%d%d",
+                  &s.x1,&s.y1,
+                  &s.x2,&s.y2,
+                  &s.x3,&s.y3);
+            break;
+
+        case 4:
+            printf("Enter centerX centerY radius: ");
+            scanf("%d%d%d",
+                  &s.x1,&s.y1,
+                  &s.radius);
+            break;
+    }
 
     shapes[shapeCount++] = s;
 
-    printf("Object Added Successfully!\n");
+    printf("Shape Added Successfully!\n");
 }
 
 void deleteShape()
 {
     int id;
 
-    printf("\nEnter Shape ID to Delete: ");
+    printf("Enter Shape ID to Delete: ");
     scanf("%d",&id);
 
     for(int i=0;i<shapeCount;i++)
     {
-        if(shapes[i].id == id)
+        if(shapes[i].id==id)
         {
             for(int j=i;j<shapeCount-1;j++)
             {
-                shapes[j] = shapes[j+1];
+                shapes[j]=shapes[j+1];
             }
 
             shapeCount--;
 
-            printf("Object Deleted Successfully!\n");
+            printf("Shape Deleted Successfully!\n");
             return;
         }
     }
@@ -108,32 +249,60 @@ void modifyShape()
 {
     int id;
 
-    printf("\nEnter Shape ID to Modify: ");
+    printf("Enter Shape ID to Modify: ");
     scanf("%d",&id);
 
     for(int i=0;i<shapeCount;i++)
     {
-        if(shapes[i].id == id)
+        if(shapes[i].id==id)
         {
-            printf("\nCurrent Object Information\n");
-            printf("Type : %s\n", getShapeName(shapes[i].type));
-            printf("X    : %d\n", shapes[i].x);
-            printf("Y    : %d\n", shapes[i].y);
-            printf("Size : %d\n", shapes[i].size);
+            printf("\nCurrent Type = %d\n",
+                   shapes[i].type);
 
-            printf("\nEnter New Shape Type: ");
+            printf("Enter New Shape Type: ");
             scanf("%d",&shapes[i].type);
 
-            printf("Enter New X Coordinate: ");
-            scanf("%d",&shapes[i].x);
+            switch(shapes[i].type)
+            {
+                case 1:
+                    printf("Enter x y width height: ");
+                    scanf("%d%d%d%d",
+                          &shapes[i].x1,
+                          &shapes[i].y1,
+                          &shapes[i].x2,
+                          &shapes[i].y2);
+                    break;
 
-            printf("Enter New Y Coordinate: ");
-            scanf("%d",&shapes[i].y);
+                case 2:
+                    printf("Enter x1 y1 x2 y2: ");
+                    scanf("%d%d%d%d",
+                          &shapes[i].x1,
+                          &shapes[i].y1,
+                          &shapes[i].x2,
+                          &shapes[i].y2);
+                    break;
 
-            printf("Enter New Size: ");
-            scanf("%d",&shapes[i].size);
+                case 3:
+                    printf("Enter x1 y1 x2 y2 x3 y3: ");
+                    scanf("%d%d%d%d%d%d",
+                          &shapes[i].x1,
+                          &shapes[i].y1,
+                          &shapes[i].x2,
+                          &shapes[i].y2,
+                          &shapes[i].x3,
+                          &shapes[i].y3);
+                    break;
 
-            printf("Object Modified Successfully!\n");
+                case 4:
+                    printf("Enter centerX centerY radius: ");
+                    scanf("%d%d%d",
+                          &shapes[i].x1,
+                          &shapes[i].y1,
+                          &shapes[i].radius);
+                    break;
+            }
+
+            printf("Shape Modified Successfully!\n");
             return;
         }
     }
@@ -141,26 +310,29 @@ void modifyShape()
     printf("Shape Not Found!\n");
 }
 
-void displayShapes()
+void displayShapeList()
 {
-    if(shapeCount == 0)
+    if(shapeCount==0)
     {
-        printf("\nNo Objects Present.\n");
+        printf("\nNo Shapes Available.\n");
         return;
     }
 
-    printf("\n========== OBJECT LIST ==========\n");
+    printf("\n===== SHAPE LIST =====\n");
 
     for(int i=0;i<shapeCount;i++)
     {
-        printf("\nObject %d\n", i+1);
-        printf("ID   : %d\n", shapes[i].id);
-        printf("Type : %s\n", getShapeName(shapes[i].type));
-        printf("X    : %d\n", shapes[i].x);
-        printf("Y    : %d\n", shapes[i].y);
-        printf("Size : %d\n", shapes[i].size);
+        printf("\nShape %d\n",i+1);
+
+        printf("ID   : %d\n",
+               shapes[i].id);
+
+        printf("Type : %d\n",
+               shapes[i].type);
     }
 }
+
+/* ================= MAIN ================= */
 
 int main()
 {
@@ -168,15 +340,21 @@ int main()
 
     do
     {
-        printf("\n===== OBJECT MANAGEMENT MENU =====\n");
-        printf("1. Add Object\n");
-        printf("2. Delete Object\n");
-        printf("3. Modify Object\n");
-        printf("4. Display Objects\n");
-        printf("5. Exit\n");
+        printf("\n===== DAY 2 : OBJECT MANAGEMENT =====\n");
+
+        printf("1 Add Shape\n");
+        printf("2 Delete Shape\n");
+        printf("3 Modify Shape\n");
+        printf("4 Display Shape List\n");
+        printf("5 Exit\n");
 
         printf("Enter Choice: ");
-        scanf("%d",&choice);
+
+        if(scanf("%d",&choice)!=1)
+        {
+            printf("Invalid Input!\n");
+            return 0;
+        }
 
         switch(choice)
         {
@@ -193,18 +371,18 @@ int main()
                 break;
 
             case 4:
-                displayShapes();
+                displayShapeList();
                 break;
 
             case 5:
-                printf("Exiting...\n");
+                printf("Program Ended.\n");
                 break;
 
             default:
                 printf("Invalid Choice!\n");
         }
 
-    } while(choice != 5);
+    }while(choice!=5);
 
     return 0;
 }
