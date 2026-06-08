@@ -301,6 +301,19 @@ void displayShapeList()
     }
 }
 
+void displayCanvas()
+{
+    for(int i=0;i<ROWS;i++)
+    {
+        for(int j=0;j<COLS;j++)
+        {
+            printf("%c",canvas[i][j]);
+        }
+
+        printf("\n");
+    }
+}
+
 int main()
 {
     int choice;
@@ -309,12 +322,12 @@ int main()
 
     do
     {
-        printf("\n===== DAY 3 =====\n");
         printf("1 Add Shape\n");
         printf("2 Delete Shape\n");
         printf("3 Modify Shape\n");
         printf("4 Display Shape List\n");
-        printf("5 Exit\n");
+        printf("5 Display Picture\n");
+        printf("6 Exit\n");
 
         scanf("%d",&choice);
 
@@ -324,9 +337,19 @@ int main()
             case 2: deleteShape(); break;
             case 3: modifyShape(); break;
             case 4: displayShapeList(); break;
+            case 5:
+                renderShapes();
+                printf("\n===== PICTURE =====\n\n");
+
+                displayCanvas();
+                break;
+
+            case 6:
+                printf("Exiting...\n");
+                break;
         }
 
-    }while(choice!=5);
+    }while(choice!=6);
 
     return 0;
 }
